@@ -2,13 +2,14 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <chrono>
 #include "mergesort.hh"
 
 using namespace std;
 namespace fs = std::filesystem;
 
 void usage(char *name) {
-    cout << "Usage: " << name << " DIRNAME" << endl;
+    cout << "Usage: " << name << " DIR" << endl;
     exit(EXIT_SUCCESS);
 }
 
@@ -21,13 +22,11 @@ int main(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 
+    cout << "nelements duration_ms" << endl;
+
     for (const auto &entry : fs::directory_iterator(dir)) {
         if (fs::is_regular_file(entry)) {
             ifstream file(entry.path());
-            if (not file.is_open()) {
-                cerr << "error: could not open the file" << endl;
-                exit(EXIT_FAILURE);
-            }
 
             unsigned size;
             file >> size;
@@ -35,8 +34,11 @@ int main(int argc, char **argv) {
 
             for (unsigned i = 0; i < size; ++i) file >> v[i];
         
-            // TODO: ordenar y contar tiempo
-        
+            auto start = chrono::high_resolution_clock::now();
+            mergesort(v);
+            auto duration = chrono::duration_cast<chrono::milliseconds>(chrono::high_resolution_clock::now() - start);
+
+            cout << size << " " << duration.count() << endl;
         }
     }
 }

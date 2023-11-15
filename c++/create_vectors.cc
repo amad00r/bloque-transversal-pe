@@ -11,7 +11,7 @@ namespace fs = std::filesystem;
 #define VECTOR_MAX_SIZE 1 << 20
 
 void usage(char *name) {
-    cout << "Usage: " << name << " NVECTORS SEED" << endl;
+    cout << "Usage: " << name << " NVECTORS SEED DIR" << endl;
     exit(EXIT_SUCCESS);
 }
 
@@ -23,7 +23,7 @@ void check_erange() {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) usage(argv[0]);
+    if (argc != 4) usage(argv[0]);
 
     unsigned nvectors = strtol(argv[1], NULL, 10);
     check_erange();
@@ -33,8 +33,7 @@ int main(int argc, char **argv) {
     mt19937 rng(seed);
     uniform_int_distribution<unsigned> size_distribution(VECTOR_MIN_SIZE, VECTOR_MAX_SIZE);
 
-    string dir = "./_" + to_string(seed);
-    fs::create_directory(dir);
+    string dir(argv[3]);
     for (unsigned i = 0; i < nvectors; ++i) {
 		ofstream file(dir + "/_" + to_string(i) + ".vector");
         if (not file.is_open()) {
