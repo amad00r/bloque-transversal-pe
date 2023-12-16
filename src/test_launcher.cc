@@ -2,7 +2,6 @@
 #include <filesystem>
 #include <fstream>
 #include <random>
-#include <ctime>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
@@ -11,7 +10,7 @@ using namespace std;
 namespace fs = std::filesystem;
 
 void usage(const char *name) {
-    cout << "Usage: " << name << " VECTORS_DIR CPP_TEST_PATH PYTHON_TEST_PATH" << endl;
+    cout << "Usage: " << name << " SEED VECTORS_DIR CPP_TEST_PATH PYTHON_TEST_PATH" << endl;
     exit(EXIT_FAILURE);
 }
 
@@ -49,16 +48,21 @@ unsigned read_u32(int fd) {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 4) usage(argv[0]);
+    if (argc != 5) usage(argv[0]);
 
-    fs::path dir(argv[1]);
+    unsigned seed = strtol(argv[1], NULL, 10);
+    if (errno == ERANGE) {
+        perror("error");
+        exit(EXIT_FAILURE);
+    }
+    fs::path dir(argv[2]);
     check_dir_existence(dir);
     fs::path vectors_dir(dir / "vectors");
     check_dir_existence(vectors_dir);
-    check_file_existence(argv[2]);
     check_file_existence(argv[3]);
+    check_file_existence(argv[4]);
 
-    mt19937 rng(static_cast<unsigned>(time(nullptr)));
+    mt19937 rng(seed);
     uniform_int_distribution<unsigned> cpp_python_order(0, 1);
 
     ofstream results_file(dir.string() + "/results.csv");
@@ -89,8 +93,8 @@ int main(int argc, char **argv) {
                 try_syscall(dup2(fd, 0));
                 try_syscall(close(fd));
                 results_file.close();
-                if (language_order) try_syscall(execlp("python3", "python3", argv[3], nullptr));
-                else try_syscall(execlp(argv[2], argv[2], nullptr));
+                if (language_order) try_syscall(execlp("python3", "python3", argv[4], nullptr));
+                else try_syscall(execlp(argv[3], argv[3], nullptr));
             }
 
             try_syscall(close(pipefd[1]));
